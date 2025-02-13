@@ -22,7 +22,7 @@ apply(
     predict(slm_model)),1,
   function(coords){
     lines(coords[1:2],coords[3:4], col = 3)
-    })
+  })
 # I add the features of the model to the plot
 coe_ff <- round(slm_model$coefficients , 2)
 text(55, 23 , 
@@ -40,7 +40,7 @@ advert_2['x-x_bar'] = advert_2$TV - x_bar
 advert_2['y-y_bar'] = advert_2$sales - y_bar
 head(advert_2)
 beta_1 = sum(advert_2$`x-x_bar` * advert_2$`y-y_bar`
-             )/ sum(advert_2$`x-x_bar`^2)
+)/ sum(advert_2$`x-x_bar`^2)
 beta_0 = y_bar - beta_1 * x_bar
 #
 beta_1; beta_0
@@ -57,8 +57,8 @@ RSE
 #
 SE_beta_0 = sqrt(
   RSE * RSE * (
-  (1/n)+((x_bar^2)/sum(advert_2$`x-x_bar`^2)))
-  )
+    (1/n)+((x_bar^2)/sum(advert_2$`x-x_bar`^2)))
+)
 SE_beta_1 = sqrt(RSE * RSE / sum(advert_2$`x-x_bar`^2))
 #
 SE_beta_0; SE_beta_1
@@ -249,3 +249,101 @@ lin_model(Balance~Own, dat = Credit)$beta
 print.lin_model(lin_model(Balance~Own, dat = Credit))
 lin_model(Balance~Region, dat = Credit)$beta
 #
+#
+#
+head(advertising)
+#
+summary(lm(
+  sales~TV+radio+TV*radio, data = advertising
+))
+#
+#
+# 3.3.2 Extension of the Linear Model
+
+# FIGURE 3.8
+plot(mpg ~ horsepower, data = Auto, main = "Regression: mpg ~ horsepower, data = Auto")
+# abline(lm(mpg ~ horsepower, data = Auto), col = 'blue')
+for (i in 1:5){
+  poly_model = lm(mpg ~ poly(horsepower, i, raw=TRUE), data = Auto)
+  print(paste("Degree: ", i, ", R Squared: ",summary(poly_model)$r.squared))
+  # https://r-graph-gallery.com/44-polynomial-curve-fitting.html
+  poly_predict <- predict( poly_model ) 
+  ix <- sort(Auto$horsepower,index.return=T)$ix
+  lines(Auto$horsepower[ix], poly_predict[ix], col=i, lwd=2 ) 
+}
+#
+legend(
+  'topright', legend = paste0("Degree: ", 1:5),
+  col = 1:5, #c("black", "red","blue","green","orange"),
+  lty=1,lwd=2)
+#
+# # 3.3.3 Extension of the Linear Model
+#
+### 1 Non-linearity of data
+# The presence of a pattern may indicate a problem with 
+# ome aspect of the linear model.
+# figure 3.9
+# 
+model_line = lm(mpg ~ horsepower, data = Auto)
+model_quad = lm(mpg ~ poly(horsepower, 2), data = Auto)
+par(mfrow = c(1,2))
+plot(model_line, 1)
+plot(model_quad, 1)
+par(mfrow = c(1,1))
+#
+# 2. Correlation of error terms
+# The standard errors that are computed for the estimated regression 
+# coefficients or the fitted values are based on the assumption of 
+# uncorrelated error terms. If in fact there is 
+# correlation among the error terms, then the estimated standard 
+# errors will tend to underestimate the true standard errors. 
+# As a result, confidence and prediction intervals will be 
+# narrower than they should be
+
+# 3. Non-constant Variance of Error Terms
+# One can identify non-constant variances in the errors, or 
+# heteroscedasticity, from the presence of a funnel shape in
+# otheresidual plot.
+
+# 4. Outliers
+# An outlier is a point for which yi is far from the value predicted 
+# by the model. Outliers can arise for a variety of reasons, such as 
+# incorrect recording of an observation during data collection.
+# If we believe that an outlier has occurred due to an error in data 
+# collection or recording, then one solution is to simply 
+# remove the observation.
+
+# 5. High Leverage Points
+#
+observation_leverage <- function(x){
+  n = length(x)
+  mean_x = mean(x)
+  h = (1/n) + ((x-mean_x)^2)/sum((x-mean_x)^2)
+}
+#
+par(mfrow = c(1,2))
+plot(Age~Limit, data = Credit)
+plot(Rating~Limit, data = Credit)
+par(mfrow = c(1,1))
+#
+# 6. Collinearity
+# Collinearity refers to the situation in which two or 
+# more predictor variables are closely related to one another.
+#
+summary(lm(Balance~Age+Limit, data = Credit))
+summary(lm(Balance~Rating+Limit, data = Credit))
+# A simple way to detect collinearity is to look at the 
+# correlation matrix of the predictors.
+
+# it is possible for collinearity to exist between three or 
+# more variables even if no pair of variables 
+# has a particularly high correlation. We call this situation 
+# multicollinearity. Instead of inspecting the correlation matrix,
+# a better way to assess multi- collinearity 
+# collinearity is to compute the variance inflation factor (VIF).
+#
+
+# 3.4 The Marketing Plan
+#
+summary(lm(sales ~ TV + radio+newspaper, data = advertising))
+
