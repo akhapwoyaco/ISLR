@@ -1,0 +1,270 @@
+---
+title: "ISLR Chapter3 "
+author: "ACO"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '6'
+  html_document:
+    df_print: paged
+    toc: true
+    toc_depth: '6'
+urlcolor: blue
+subtitle: 'Linear Regression: Labs'
+---
+
+\newpage
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = T, warning=FALSE,message=FALSE,attr.source='.numberLines',attr.output='.numberLines', fig.align='center', dpi=350, fig.width=15, fig.height=15)
+```
+
+# Linear Regression
+
+## 3.6.1 Libraries
+
+```{r}
+library(MASS)
+library(ISLR2)
+```
+
+## 3.6.2 Simple Linear Regression
+
+Predict `medv` using 12 predictors such as `rm` (average number of rooms per house),
+`age` (proportion of owner-occupied units built prior to 1940) and `lstat` (percent
+of households with low socioeconomic status).
+
+```{r}
+str(Boston, 2)
+```
+
+```{r}
+lm_fit <- lm(medv ~ lstat , data = Boston)
+summary(lm_fit)
+```
+
+confidence interval for coeficient estimates
+
+```{r}
+confint(lm_fit)
+```
+
+confidence interval for predictions
+
+```{r}
+predict(
+  lm_fit , data.frame(lstat = (c(5, 10, 15))), interval = "confidence")
+predict(
+  lm_fit , data.frame(lstat = (c(5, 10, 15))), interval = "prediction")
+```
+
+```{r}
+plot(medv ~ lstat , data = Boston)
+abline(lm(medv ~ lstat , data = Boston), col = 'blue')
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(lm(medv ~ lstat , data = Boston))
+par(mfrow = c(1,1))
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(predict(lm_fit), residuals(lm_fit))
+plot(predict(lm_fit), rstudent(lm_fit))
+plot(hatvalues(lm_fit))
+par(mfrow = c(1,1))
+```
+
+```{r}
+which.max(hatvalues(lm_fit))
+```
+
+## 3.6.3 Multiple Linear Regression
+
+```{r}
+lm_fit <- lm(medv ~ lstat + age , data = Boston)
+summary(lm_fit)
+```
+
+```{r}
+lm_fit <- lm(medv ~ ., data = Boston)
+summary(lm_fit)
+```
+
+Hence R-Squared = `r `summary(lm.fit)$r.sq` and RSE = `summary(lm.fit)$sigma`
+
+```{r}
+library(car)
+```
+
+```{r}
+vif(lm_fit)
+```
+
+## 3.6.4 Interaction Terms
+
+```{r}
+# interaction, use : or *
+lm_fit <- lm(medv ~ lstat:age , data = Boston)
+summary(lm_fit)
+```
+
+## 3.6.5 Non-linear Transformations of the Predictors
+
+```{r}
+lm_fit <- lm(medv ~ lstat , data = Boston)
+summary(lm_fit)
+```
+
+```{r}
+lm_fit2 <- lm(medv ~ lstat + I(lstat^2) , data = Boston)
+summary(lm_fit)
+```
+
+```{r}
+anova(lm_fit, lm_fit2)
+```
+
+
+```{r, eval=F}
+lm_fit <- lm(medv ~ lstat + poly(lstat, 2, raw = TRUE) , data = Boston)
+summary(lm_fit)
+```
+
+## 3.6.6 Qualitative Predictors
+
+```{r}
+str(Carseats)
+```
+
+```{r}
+lm_fit <- lm(
+  Sales ~ . + Income:Advertising + Price:Age, data = Carseats)
+summary(lm_fit)
+```
+
+```{r}
+contrasts(Carseats$ShelveLoc)
+```
+
+
+# Applied
+
+## Q8
+
+```{r}
+q8_lm = lm(mpg~horsepower, data = Auto)
+summary(q8_lm)
+```
+
+i. Yes
+ii. `r cor(Auto$mpg, Auto$horsepower)`
+iii. R squared 60% 
+iv 
+```{r}
+predict(q8_lm, newdata = data.frame(horsepower = 98))
+```
+
+```{r}
+predict(q8_lm, newdata = data.frame(horsepower = 98), interval = "confidence")
+predict(q8_lm, newdata = data.frame(horsepower = 98), interval = "prediction")
+```
+
+```{r}
+q8_lm = lm(mpg~horsepower, data = Auto)
+plot(mpg~horsepower, data = Auto)
+abline(q8_lm)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(q8_lm)
+par(mfrow = c(1,1))
+```
+
+## Q9
+
+### a
+
+```{r}
+pairs(Auto)
+```
+
+### b
+```{r}
+cor(Auto[, sapply(Auto, FUN = (\(x) is.numeric(x)))])
+```
+
+### c
+```{r}
+q9_model = lm(mpg ~. -name, data = Auto)
+summary(q9_model)
+```
+
+i. Yes
+ii. displacement, weight, year, origin
+iii. Most recent cars have higher mpg
+
+### d
+
+```{r}
+par(mfrow = c(2,2))
+plot(q9_model)
+par(mfrow = c(1,1))
+```
+
+### e
+
+```{r}
+summary(lm(mpg ~ cylinders*displacement, data = Auto))
+summary(lm(mpg ~ cylinders:displacement, data = Auto))
+```
+
+### f
+
+```{r}
+par(mfrow=c(2,2))
+q9_lm_f = lm(mpg~weight, data= Auto)
+plot(q9_lm_f, 1)
+
+q9_lm_f = lm(mpg~log(weight), data= Auto)
+plot(q9_lm_f, 1)
+
+q9_lm_f = lm(mpg~sqrt(weight), data= Auto)
+plot(q9_lm_f, 1)
+
+q9_lm_f = lm(mpg~poly(weight, 2, raw = T), data= Auto)
+plot(q9_lm_f, 1)
+par(mfrow=c(1, 1))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
