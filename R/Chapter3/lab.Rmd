@@ -149,6 +149,7 @@ summary(lm_fit)
 contrasts(Carseats$ShelveLoc)
 ```
 
+\newpage
 
 # Applied
 
@@ -184,6 +185,7 @@ plot(q8_lm)
 par(mfrow = c(1,1))
 ```
 
+\newpage
 ## Q9
 
 ### a
@@ -240,28 +242,280 @@ plot(q9_lm_f, 1)
 par(mfrow=c(1, 1))
 ```
 
+\newpage
+## Q10
+### a
+
+```{r}
+q10_model = lm(Sales~Price+Urban+US, data = Carseats)
+summary(q10_model)
+```
+### b
+```{r}
+confint(q10_model, level = 0.95)
+```
+
+### h
+
+```{r}
+par(mfrow = c(2,2))
+plot(q10_model)
+par(mfrow = c(1,1))
+```
+
+\newpage
+## Q11
+
+### a
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- 2*x+rnorm(100)
+```
+
+```{r}
+q11_model = lm(y~x)
+```
+
+```{r}
+summary(q11_model)
+```
+
+```{r}
+q11_model2 = lm(y~x+0)
+```
+
+```{r}
+summary(q11_model2)
+```
+
+### d
+
+```{r}
+se_beta = function(x, y){
+  x_dim = dim(x)
+  y_dim = dim(y)
+  stopifnot(x_dim == y_dim)
+  data = data.frame(x = x, y = y)
+  n = dim(data)[1]
+  #
+  beta = sum(data$x * data$y)/ sum(data$x^2)
+  #
+  SE_beta = sqrt(
+    sum(
+      (data$y - data$x*beta)^2)/(
+        (n-1)*sum(data$x^2))
+  )
+  #
+  beta_ci = c(beta_1 - 2*SE_beta_1, beta_1 + 2*SE_beta_1)
+  #
+  t_beta = (beta_1 - 0)/SE_beta_1
+  #
+  return(
+    list(
+      n = n, beta = beta,
+      SE_beta = SE_beta,
+      beta_ci = beta_ci,
+      t_beta = t_beta)
+  )
+  #
+}
+```
+
+```{r}
+se_beta(x = x, y = y)
+se_beta(x = y, y = x)
+```
+
+### f
+
+They are the same
+
+```{r}
+summary(lm(y~x+0))
+summary(lm(x~y+0))
+```
+
+\newpage
+## Q12
+
+### a
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- rnorm(100)
+```
+
+### b
+
+```{r}
+summary(lm(y~x+0))
+summary(lm(x~y+0))
+```
+
+\newpage
+## Q13
+
+### a, b, c
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100, 0,0.25)
+y = -1 + 0.5*x + eps
+length(y)
+```
+
+```{r}
+summary(lm(y~x))
+```
+
+### d
+
+```{r}
+plot(y~x)
+```
+
+### e, f
+
+```{r}
+model_xy = lm(y~x)
+plot(y~x)
+abline(model_xy)
+coe_ff <- round(model_xy$coefficients , 2)
+text(
+  -1.5, -0.4 , 
+  paste(
+    "Model : ",coe_ff[1] , " + " , 
+    coe_ff[2] , "*x"  , "\n\n" , 
+    "P-value adjusted = ", 
+    round(summary(model_xy)$adj.r.squared,2)),
+  cex = 0.5)
+```
+
+### g
+
+```{r}
+plot(y ~ x, main = "Regression: x ~ y")
+for (i in 1:5){
+  poly_model = lm(y ~ poly(x, i, raw=TRUE))
+  print(paste("Degree: ", i, ", R Squared: ",summary(poly_model)$r.squared))
+  # https://r-graph-gallery.com/44-polynomial-curve-fitting.html
+  poly_predict <- predict( poly_model ) 
+  ix <- sort(x,index.return=T)$ix
+  lines(x[ix], poly_predict[ix], col=i, lwd=2 ) 
+}
+#
+legend(
+  'topleft', legend = paste0("Degree: ", 1:5),
+  col = 1:5, lty=1,lwd=2, cex = 0.5)
+
+```
+
+### h
+
+
+\newpage
+## Q14
+
+### a
+
+```{r}
+set.seed(1)
+x1 <- runif(100)
+x2 <- 0.5 * x1 + rnorm(100) / 10
+y <- 2 + 2 * x1 + 0.3 * x2 + rnorm(100)
+```
+
+```{r}
+cor(x1, x2)
+```
+### c
+
+```{r}
+summary(lm(y~x1+x2))
+```
+
+### d
+
+```{r}
+summary(lm(y~x1))
+```
+
+### e
+
+```{r}
+summary(lm(y~x2))
+```
+
+### f
+
+`SE's` halved for both, the p-value was more significant
+
+### g
+
+```{r}
+x1 = c(x1, 0.1)
+x2 = c(x2, 0.8)
+y = c(y, 6)
+```
+
+
+```{r}
+summary(lm(y~x1+x2))
+```
+
+```{r}
+summary(lm(y~x1))
+```
+
+```{r}
+summary(lm(y~x2))
+```
+
+\newpage
+## Q15
+
+### a
+
+```{r}
+predictor_vars = names(Boston)[-1]
+response_vars = names(Boston)[1]
+#
+for (var in predictor_vars){
+  print(paste('Model: ', response_vars, ' ~ ', var))
+  print(
+    summary(lm(Boston[,response_vars] ~ Boston[,var]))
+  )
+}
+#
+```
 
 
 
+### b
+
+```{r}
+summary(lm(crim~., data = Boston))
+```
 
 
+### a
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+predictor_vars = names(Boston)[-1]
+response_vars = names(Boston)[1]
+#
+for (var in predictor_vars){
+  print(paste('Model: ', response_vars, ' ~ ', var))
+  print(
+    summary(lm(Boston[,response_vars] ~ poly(Boston[,var], 3, raw = T)))
+  )
+}
+#
+```
 
 
 

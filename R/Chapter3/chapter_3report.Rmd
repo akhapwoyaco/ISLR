@@ -206,3 +206,4 @@ summary(lm(Balance~Rating+Limit, data = Credit))
 summary(lm(sales ~ TV + radio+newspaper, data = advertising))
 ```
 
+
