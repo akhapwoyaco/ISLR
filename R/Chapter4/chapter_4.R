@@ -50,7 +50,38 @@ balance_data = data.frame(
 ) |> cbind(pred_bal)
 head(balance_data)
 #
-plot(pred_bal~balance, data = balance_data, )
+plot(pred_bal~balance, data = balance_data)
 #
 # 4.3.5 
 #
+
+## 4.4 Generative Models for Classification
+#
+
+
+# 4.6.1 Linear Regression
+Bikeshare |> head()
+#
+summary(lm(bikers~mnth+hr+workingday+temp+weathersit, data = Bikeshare))
+#
+plot(bikers~hr, data = Bikeshare)
+plot(log(bikers)~hr, data = Bikeshare)
+#
+plot(x = 1:10, y = 1:10)
+#
+
+plot(y = Bikeshare$bikers, x = as.numeric(Bikeshare$hr), col = 'blue')
+plot(y = log(Bikeshare$bikers), x = as.numeric(Bikeshare$hr), col = 'blue')
+#
+# 4.6.2 Poisson regression on bike share data
+#
+
+
+
+
+
+
+
+
+
+
