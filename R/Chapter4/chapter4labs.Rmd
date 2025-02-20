@@ -189,7 +189,217 @@ nb_preds[1:5, ]
 
 # 4.7.6 K-Nearest Neighbour
 
+```{r}
+library(class)
+train <- Smarket$Year < 2005
+train_X <- Smarket[Smarket$Year < 2005 , 2:3]
+test_X <- Smarket[Smarket$Year >= 2005 , 2:3]
+train_Direction <- Smarket[Smarket$Year < 2005 , 9]
+test_Direction <- Smarket[Smarket$Year >= 2005 , 9]
+```
 
+```{r}
+set.seed(1)
+knn_pred <- knn(train_X, test_X, train_Direction , k = 1)
+table(knn_pred , test_Direction)
+```
+
+```{r}
+set.seed(1)
+knn_pred <- knn(train_X, test_X, train_Direction , k = 3)
+table(knn_pred , test_Direction)
+```
+
+```{r}
+dim(Caravan)
+summary(Caravan$Purchase)
+```
+
+```{r}
+standardized_X <- scale(Caravan[,-86])
+var(Caravan[,1])
+var(Caravan[,2])
+
+var(standardized_X[,1])
+var(standardized_X[,1])
+```
+
+```{r}
+test <- 1:1000
+train_X <- standardized_X[-test, ]
+test_X <- standardized_X[test, ]
+train_Y <- Caravan$Purchase[-test]
+test_Y <- Caravan$Purchase[test]
+set.seed(1)
+knn_pred <- knn(train_X, test_X, train_Y  , k = 1)
+mean(test_Y != knn_pred)
+mean(test_Y != "No")
+```
+
+
+```{r}
+table(knn_pred , test_Y)
+```
+
+```{r}
+knn_pred <- knn(train_X, test_X, train_Y, k = 3)
+table(knn_pred , test_Y)
+#
+knn_pred <- knn(train_X, test_X, train_Y, k = 5)
+table(knn_pred , test_Y)
+```
+
+\newpage
+# 4.7.7 Poisson Regression
+
+```{r}
+dim(Bikeshare)
+names(Bikeshare)
+```
+
+```{r}
+mod_lm <- lm(
+  bikers~mnth + hr + workingday + temp + weathersit, 
+  data = Bikeshare
+)
+summary(mod_lm)
+```
+
+
+```{r}
+contrasts(Bikeshare$hr) = contr.sum(24)
+contrasts(Bikeshare$mnth) = contr.sum(12)
+mod_lm2 <- lm(
+  bikers~mnth + hr + workingday + temp + weathersit , 
+  data = Bikeshare
+)
+summary(mod_lm2)
+```
+
+```{r}
+sum((predict(mod_lm) - predict(mod_lm2))^2)
+```
+
+```{r}
+all.equal(predict(mod_lm), predict(mod_lm2))
+```
+
+```{r}
+coef_months <- c(coef(mod_lm2)[2:12], -sum(coef(mod_lm2)[2:12]))
+```
+
+
+```{r}
+plot(
+  coef_months , xlab = "Month", ylab = "Coefficient",
+  xaxt = "n", col = "blue", pch = 19, type = "o")
+axis(side = 1, at = 1:12, 
+     labels = c("J", "F", "M", "A",
+                "M", "J", "J", "A", "S", "O", "N", "D"))
+
+coef_hours <- c(coef(mod_lm2)[13:35],-sum(coef(mod_lm2)[13:35]))
+plot(coef_hours , xlab = "Hour", ylab = "Coefficient",
+     col = "blue", pch = 19, type = "o")
+```
+
+```{r}
+mod_pois <- glm(
+bikers~mnth + hr + workingday + temp + weathersit ,
+data = Bikeshare , family = poisson
+)
+summary(mod_pois)
+```
+
+
+```{r}
+coef_months <- c(coef(mod_pois)[2:12], -sum(coef(mod_pois)[2:12]))
+```
+
+
+```{r}
+plot(
+  coef_months , xlab = "Month", ylab = "Coefficient",
+  xaxt = "n", col = "blue", pch = 19, type = "o")
+axis(side = 1, at = 1:12, 
+     labels = c("J", "F", "M", "A",
+                "M", "J", "J", "A", "S", "O", "N", "D"))
+
+coef_hours <- c(coef(mod_pois)[13:35],-sum(coef(mod_pois)[13:35]))
+plot(coef_hours , xlab = "Hour", ylab = "Coefficient",
+     col = "blue", pch = 19, type = "o")
+```
+
+
+```{r}
+plot(predict(mod_lm2), predict(mod_pois , type = "response"))
+abline(0, 1, col = 2, lwd = 3)
+```
+
+
+
+
+
+# Applied
+
+## Q13
+
+```{r}
+head(Weekly)
+```
+
+### a
+
+```{r}
+boxplot(Today~Direction, data = Weekly, 
+        col = c('blue', 'red'))
+```
+
+```{r}
+pairs(Weekly[,1:7])
+```
+
+### b
+```{r}
+q13_model <- glm(Direction~., data = Weekly, family = binomial)
+summary(q13_model)
+```
+
+```{r}
+glm_probs <- predict(q13_model,type = 'response')
+```
+
+```{r}
+glm_pred <- rep("Down", nrow(Weekly))
+glm_pred[glm_probs > .5] = "Up"
+```
+
+```{r}
+table(glm_pred , Weekly$Direction)
+mean(glm_pred == Weekly$Direction)
+```
+
+### d
+
+```{r}
+train_X <- Weekly[Weekly$Year <= 2008 , -9]
+test_X <- Weekly[Weekly$Year > 2008 , -9]
+train_Direction <- Weekly[Weekly$Year <= 2008 , 9]
+test_Direction <- Weekly[Weekly$Year > 2008 , 9]
+```
+
+```{r}
+qda_fit <- qda(Direction~Lag2, data = Weekly, subset = train)
+qda_pred = predict(qda_fit, test_X)
+qda_class = qda_pred$class
+table(qda_class, test_Direction)
+mean(qda_class == test_Direction)
+
+qda_fit <- qda(Direction~Lag2, data = Smarket, subset = train)
+qda_pred = predict(qda_fit, test_X)
+qda_class = qda_pred$class
+table(qda_class, test_Direction)
+mean(qda_class == test_Direction)
+```
 
 
 
