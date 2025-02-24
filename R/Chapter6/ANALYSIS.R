@@ -13,4 +13,139 @@ dim(Hitters)
 sum(is.na(Hitters))
 #
 library(leaps)
+regfit_full <- regsubsets(Salary~., data = Hitters)
+summary(regfit_full)
+#
+regfit_full <- regsubsets(Salary~., data = Hitters, 
+                          nvmax = 19)
+reg_summary <- summary(regfit_full)
+names(reg_summary)
+reg_summary$rsq
+#
+par(mfrow = c(2,3))
+plot(
+  reg_summary$rss , xlab = "Number of Variables",
+  ylab = "RSS", type = "l")
+plot(
+  reg_summary$adjr2 , xlab = "Number of Variables",
+  ylab = "Adjusted RSq", type = "l")
+
+which.max(reg_summary$adjr2)
+plot(
+  reg_summary$adjr2 , xlab = "Number of Variables",
+  ylab = "Adjusted RSq", type = "l")
+points(
+  11, reg_summary$adjr2[11], col = "red", cex = 2,
+  pch = 20)
+
+plot(
+  reg_summary$cp, xlab = "Number of Variables",
+  ylab = "Cp", type = "l")
+which.min(reg_summary$cp)
+points(
+  10, reg_summary$cp[10], col = "red", cex = 2,
+  pch = 20)
+which.min(reg_summary$bic)
+plot(
+  reg_summary$bic , xlab = "Number of Variables",
+  ylab = "BIC", type = "l")
+points(
+  6, reg_summary$bic[6], col = "red", cex = 2,
+  pch = 20)
+
+par(mfrow = c(1,1))
+#
+#
+par(mfrow = c(2,2))
+plot(regfit_full , scale = "r2")
+plot(regfit_full , scale = "adjr2")
+plot(regfit_full , scale = "Cp")
+plot(regfit_full , scale = "bic")
+par(mfrow = c(1,1))
+#
+# Forward and Backward Stepwise Selection
+#
+regfit_fwd <- regsubsets(
+  Salary~., data = Hitters, 
+  nvmax = 19, method = "forward")
+summary(regfit_fwd)
+#
+regfit_bwd <- regsubsets(
+  Salary~., data = Hitters, 
+  nvmax = 19, method = "backward")
+#
+summary(regfit_bwd)
+#
+set.seed(1)
+train <- sample(
+  c(TRUE , FALSE), nrow(Hitters),
+  replace = TRUE)
+test <- (!train)
+#
+regfit_best <- regsubsets(
+  Salary~., data = Hitters[train,], 
+  nvmax = 19)
+#
+test_mat <- model.matrix(
+  Salary~., 
+  data = Hitters[test , ])
+#
+#
+val_errors <- rep(NA, 19)
+for (i in 1:19) {
+  coefi <- coef(regfit_best , id = i)
+  pred <- test_mat[, names(coefi)] %*% coefi
+  val_errors[i] <- mean((Hitters$Salary[test] - pred)^2)
+}
+#
+val_errors
+#
+predict_regsubsets <- function(object , newdata , id, ...) {
+  form <- as.formula(object$call [[2]])
+  mat <- model.matrix(form , newdata)
+  coefi <- coef(object , id = id)
+  xvars <- names(coefi)
+  mat[, xvars] %*% coefi
+}
+#
+regfit_best <- regsubsets(
+  Salary~., data = Hitters, 
+  nvmax = 19)
+#
+k <- 10
+n <- nrow(Hitters)
+set.seed(1)
+folds <- sample(rep(1:k, length = n))
+cv_errors <- matrix(
+  NA, k, 19,
+  dimnames = list(NULL , paste (1:19)))
+#
+for (j in 1:k) {
+  best_fit <- regsubsets(
+    Salary ~ .,
+    data = Hitters[folds != j, ],
+    nvmax = 19)
+  for (i in 1:19) {
+    pred <- predict_regsubsets(best_fit , Hitters[folds == j, ], id = i)
+    cv_errors[j, i] <- mean((Hitters$Salary[folds == j] - pred)^2)
+  }
+}
+#
+#
+mean_cv_errors <- apply(cv_errors , 2, mean)
+mean_cv_errors
+par(mfrow = c(1, 1))
+plot(mean_cv_errors , type = "b")
+reg_best <- regsubsets(
+  Salary ~ ., data = Hitters ,
+  nvmax = 19)
+coef(reg_best, 10)
+#
+#
+
+#
+
+
+
+
 #
