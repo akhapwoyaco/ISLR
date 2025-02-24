@@ -173,7 +173,7 @@ mean((ridge_pred - y_test)^2)
 lm(y~x, subset = train)
 predict(
   ridge_mod , s = 0, exact = T, type = "coefficients",
-          x = x[train, ], y = y[train])[1:20, ]
+  x = x[train, ], y = y[train])[1:20, ]
 #
 set.seed(1)
 cv_out <- cv.glmnet(x[train , ], y[train], alpha = 0)
@@ -182,22 +182,68 @@ bestlam <- cv_out$lambda.min
 bestlam
 #
 ridge_pred <- predict(ridge_mod , s = bestlam ,
-                          newx = x[test , ])
+                      newx = x[test , ])
 mean((ridge_pred - y_test)^2)
 out <- glmnet(x, y, alpha = 0)
 predict(out , type = "coefficients", s = bestlam)[1:20, ]
-
-
+# The Lasso
+#
+lasso_mod <- glmnet(x[train , ], y[train], alpha = 1,
+                    lambda = grid)
+plot(lasso_mod)
+#
+set.seed(1)
+cv_out <- cv.glmnet(x[train , ], y[train], alpha = 1)
+plot(cv_out)
+bestlam <- cv_out$lambda.min
+lasso_pred <- predict(lasso_mod , s = bestlam ,
+                      newx = x[test , ])
+mean((lasso_pred - y.test)^2)
+#
+out <- glmnet(x, y, alpha = 1, lambda = grid)
+lasso_coef <- predict(out , type = "coefficients",
+                      s = bestlam)[1:20, ]
+lasso_coef
+#
+# 6.5.3 PCR and PLS Regression
+# PCR
+#
+library(pls)
+set.seed(2)
+pcr_fit <- pcr(
+  Salary~., data = Hitters , scale = TRUE,
+  validation = "CV")
+#
+summary(pcr_fit)
+#
+validationplot(pcr_fit , val.type = "MSEP")
+#
+#
+set.seed(1)
+pcr_fit <- pcr(Salary~., data = Hitters , subset = train ,
+                 scale = TRUE , validation = "CV")
+validationplot(pcr_fit , val.type = "MSEP")
+#
+pcr_pred <- predict(pcr_fit , x[test , ], ncomp = 5)
+mean((pcr_pred - y_test)^2)
+#
+pcr_fit <- pcr(y~x, scale = TRUE, ncomp = 5)
+summary(pcr_fit)
+#
+# PLS
+#
+pls_fit <- plsr(
+  Salary~., data = Hitters , subset = train , 
+  scale = TRUE, validation = "CV")
+summary(pls_fit)
+#
+validationplot(pls_fit , val.type = "MSEP")
+#
+pls_pred <- predict(pls_fit , x[test , ], ncomp = 1)
+mean((pls_pred - y_test)^2)
+#
+pls_fit <- plsr(Salary~., data = Hitters , scale = TRUE,
+                  ncomp = 1)
+summary(pls_fit)
 #
 
-
-
-#
-
-
-
-
-
-
-
-#
