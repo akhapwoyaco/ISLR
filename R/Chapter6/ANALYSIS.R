@@ -142,8 +142,60 @@ reg_best <- regsubsets(
 coef(reg_best, 10)
 #
 #
+# 6.5.2 Ridge regression and lasso
+#
+library(glmnet)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
+#
+# Ridge regression
+#
+library(glmnet)
+grid <- 10^seq(10, -2, length = 100)
+ridge_mod <- glmnet(x, y, alpha = 0, lambda = grid)
+#
+dim(coef(ridge_mod))
+#
+set.seed(1)
+train <- sample(1:nrow(x), nrow(x) / 2)
+test <- (-train)
+y_test <- y[test]
+#
+ridge_mod <- glmnet(x[train , ], y[train], alpha = 0,
+                    lambda = grid, thresh = 1e-12)
+ridge_pred <- predict(ridge_mod , s = 4, newx = x[test , ])
+mean((ridge_pred - y_test)^2)
+#
+ridge_pred <- predict(
+  ridge_mod , s = 0, newx = x[test , ],
+  exact = T, x = x[train , ], y = y[train])
+mean((ridge_pred - y_test)^2)
+lm(y~x, subset = train)
+predict(
+  ridge_mod , s = 0, exact = T, type = "coefficients",
+          x = x[train, ], y = y[train])[1:20, ]
+#
+set.seed(1)
+cv_out <- cv.glmnet(x[train , ], y[train], alpha = 0)
+plot(cv_out)
+bestlam <- cv_out$lambda.min
+bestlam
+#
+ridge_pred <- predict(ridge_mod , s = bestlam ,
+                          newx = x[test , ])
+mean((ridge_pred - y_test)^2)
+out <- glmnet(x, y, alpha = 0)
+predict(out , type = "coefficients", s = bestlam)[1:20, ]
+
 
 #
+
+
+
+#
+
+
+
 
 
 
